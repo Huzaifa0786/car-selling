@@ -4,7 +4,7 @@ const cors = require("cors");
 app.use(express.json());
 const path = require("path");
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: "https://car-selling-test.vercel.app/",
   credentials: true,
 };
 
