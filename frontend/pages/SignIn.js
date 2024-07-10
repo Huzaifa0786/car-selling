@@ -49,7 +49,7 @@ export default function SignIn() {
 
     try {
       // Send credentials to the backend for authentication
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch("https://car-selling-test-api.vercel.app/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
