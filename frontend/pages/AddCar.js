@@ -136,6 +136,7 @@ export default function AddCar() {
       const result = await response.json();
       if (!response.ok) {
         throw new Error(result.error || "Error occured!");
+        return;
       }
       console.log("Car entry submitted successfully:", result);
       setFormData({
