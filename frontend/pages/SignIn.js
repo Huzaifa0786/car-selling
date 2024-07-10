@@ -17,20 +17,24 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 
+// Create a default theme
 const defaultTheme = createTheme();
 
 export default function SignIn() {
-  const router = useRouter();
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
+  const router = useRouter(); // Initialize the router for navigation
+  const [showPassword, setShowPassword] = React.useState(false); // State to handle password visibility
+  const [loading, setLoading] = React.useState(false); // State to handle loading status
+  const [error, setError] = React.useState(null); // State to handle errors
 
+  // Toggle password visibility
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
+  // Prevent default mouse down behavior on password visibility icon
   const handleMouseDownPassword = (event) => {
     event.preventDefault();
   };
 
+  // Handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -44,7 +48,8 @@ export default function SignIn() {
     setError(null);
 
     try {
-      const response = await fetch("https://car-selling-test-api.vercel.app/login", {
+      // Send credentials to the backend for authentication
+      const response = await fetch("http://localhost:5000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,13 +64,13 @@ export default function SignIn() {
       }
 
       console.log("Sign in successful:", data);
-      localStorage.setItem("token", data.token);
-      router.push("/AddCar");
+      localStorage.setItem("token", data.token); // Save token to localStorage
+      router.push("/AddCar"); // Navigate to AddCar page
     } catch (error) {
       console.error("Error during sign in:", error.message);
-      setError(error.message || "Sign in failed. Please try again.");
+      setError(error.message || "Sign in failed. Please try again."); // Set error message
     } finally {
-      setLoading(false);
+      setLoading(false); // Set loading to false after the process is complete
     }
   };
 
