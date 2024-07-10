@@ -15,12 +15,13 @@ import {
   Snackbar,
   Dialog,
   DialogContent,
-  DialogTitle,
 } from "@mui/material";
 import { PhotoCamera, Visibility, Delete } from "@mui/icons-material";
 import MuiAlert from "@mui/material/Alert";
+import { put } from "@vercel/blob";
 
 export default function AddCar() {
+  // State variables
   const [formData, setFormData] = useState({
     model: "",
     price: "",
@@ -39,6 +40,7 @@ export default function AddCar() {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
 
+  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -59,6 +61,7 @@ export default function AddCar() {
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -89,27 +92,51 @@ export default function AddCar() {
     }
 
     setLoading(true);
-    const data = new FormData();
-    data.append("model", formData.model);
-    data.append("price", formData.price);
-    data.append("phone", formData.phone);
-    data.append("maxPictures", formData.maxPictures);
-    imageFiles.forEach((file) => {
-      data.append("pictures", file);
-    });
 
+    // Upload images to Vercel Blob
+    const uploadedImageUrls = await Promise.all(
+      imageFiles.map(async (file) => {
+        try {
+          const response = await put(file.name, file, {
+            access: "public",
+            token:
+              "vercel_blob_rw_gVmj7fwnYsqSRPoa_Bmg66DKA50V6um8tYPdCldpwGv4ZV5",
+          });
+          return response.url;
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          setAlert({
+            type: "error",
+            message: "Error uploading images to Vercel Blob.",
+          });
+          setOpen(true);
+          throw error;
+        }
+      })
+    );
+
+    // Prepare data to send to backend
+    const data = {
+      ...formData,
+      pictures: uploadedImageUrls,
+    };
+    console.log(uploadedImageUrls);
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch("https://car-selling-test-api.vercel.app/addcar", {
+      const response = await fetch("http://localhost:5000/addcar", {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         credentials: "include",
-        body: data,
+        body: JSON.stringify(data),
       });
 
       const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Error occured!");
+      }
       console.log("Car entry submitted successfully:", result);
       setFormData({
         model: "",
@@ -137,20 +164,24 @@ export default function AddCar() {
     }
   };
 
+  // Close alert Snackbar
   const handleClose = () => {
     setOpen(false);
   };
 
+  // Open image dialog
   const handleOpenDialog = (url) => {
     setSelectedImage(url);
     setOpenDialog(true);
   };
 
+  // CLose image dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedImage("");
   };
 
+  // Delete image from state
   const handleDeleteImage = (index) => {
     setImageFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
     setImageURLs((prevURLs) => prevURLs.filter((_, i) => i !== index));
@@ -309,7 +340,6 @@ export default function AddCar() {
         </MuiAlert>
       </Snackbar>
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        {/* <DialogTitle>Image Preview</DialogTitle> */}
         <DialogContent>
           <img src={selectedImage} alt="Selected" style={{ width: "100%" }} />
         </DialogContent>
